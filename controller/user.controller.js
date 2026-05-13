@@ -10,38 +10,30 @@ require("dotenv").config()
 
 async function login(req, res) {
 	try {
-
-		const cred = req.body;
-		const email = cred.email;
-		const password = cred.password;
+		const {email, password} = req.body;
 		const secret = process.env.JWT_SECRET;
-
 
 		const user = await userService.getUserByEmail(email);
 		console.log(user);
+
 		if (!user) {
-			res.status(403).json({message: "user does not exist."})
+			return res.status(403).json({message: "user does not exist."}); // ← return added
 		}
 
-		bcrypt.compare(password, user.password, (err, result) => {
-			if (err) {
-				console.log(err);
-				res.status(401).json("wrong credentials");
-			}
-			if (result) {
-				const date = new Date()
-				const tokeninfo = {email: email, dateNow: date};
-				const token = jwt.sign(tokeninfo, secret);
-				res.status(200).json({token: token});
-			}
-		});
+		// Use the promise version of bcrypt.compare — cleaner in async functions
+		const result = await bcrypt.compare(password, user.password);
 
+		if (!result) {
+			return res.status(401).json({message: "wrong credentials"});
+		}
+
+		const token = jwt.sign({email, dateNow: new Date()}, secret);
+		return res.status(200).json({token});
 
 	} catch (e) {
-
+		console.error("Login error:", e);
+		return res.status(500).json({error: "internal server error"}); // ← always respond
 	}
-
-
 }
 
 async function addUser(req, res) {
@@ -115,8 +107,12 @@ async function getUserByID(req, res) {
 
 async function getUserByEmail(req, res) {
 	try {
-		const email = req.body.email;
-		console.log(email, "email from the body");
+		const email = req.query.email;  // ← was req.body.email
+		console.log(email, "email from query");
+
+		if (!email) {
+			return res.status(400).json({message: "email is required."});
+		}
 
 		const user = await userService.getUserByEmail(email);
 
@@ -124,7 +120,7 @@ async function getUserByEmail(req, res) {
 			return res.status(404).json({message: "user does not exist."});
 		}
 
-		console.log(user.username, "user retrieved");
+		user.password = "";
 		return res.status(200).json({user});
 
 	} catch (e) {
@@ -139,6 +135,7 @@ async function deleteUserByEmail(req, res) {
 	try {
 		const deleteduser = await userService.deleteUser(email);
 
+
 		if (!deleteduser) return res.status(500).json({error: "no use to delete "});
 
 		res.status(200).json({message: "one user deleted"})
@@ -152,12 +149,18 @@ async function deleteUserByEmail(req, res) {
 
 async function updateUsername(req, res) {
 	try {
-
 		const {oldUsername, newUsername} = req.body;
+
+		if (!oldUsername || !newUsername) {
+			return res.status(400).json({error: "oldUsername and newUsername are required"});
+		}
+
 		const message = await userService.updateUsername(oldUsername, newUsername);
 		return res.status(200).json({message});
+
 	} catch (e) {
-		console.log(e);
+		console.error("Update username error:", e);
+		return res.status(500).json({error: "internal server error"});
 	}
 }
 

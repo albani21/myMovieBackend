@@ -11,7 +11,7 @@ const authRouter = require("./router/user.routes");
 const PORT = process.env.SERVER_PORT || 3000;
 
 app.use(helmet());
-app.use(cors());
+app.use(cors({origin: "http://localhost:5173"}));
 app.use(express.json());
 
 app.use("/api", authRouter);
@@ -19,7 +19,7 @@ app.use("/api", authRouter);
 app.listen(PORT, async () => {
 	try {
 		await sequelize.authenticate();
-		await sequelize.sync({force: true});
+		await sequelize.sync();
 		console.log("the DATA BASE is RUNNING...")
 		console.log("the server is listening in PORT ", PORT)
 	} catch (e) {
