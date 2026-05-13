@@ -20,7 +20,7 @@ app.use("/api", authRouter);
 app.listen(PORT, async () => {
 	try {
 		await sequelize.authenticate();
-		await sequelize.sync({force: true});
+		await sequelize.sync();
 		console.log("the DATA BASE is RUNNING...")
 		console.log("the server is listening in PORT ", PORT)
 	} catch (e) {
