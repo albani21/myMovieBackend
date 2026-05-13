@@ -17,22 +17,22 @@ async function login(req, res) {
 		console.log(user);
 
 		if (!user) {
-			return res.status(403).json({message: "user does not exist."}); // ← return added
+			return res.status(403).json({message: "user does not exist."});
 		}
 
-		// Use the promise version of bcrypt.compare — cleaner in async functions
+
 		const result = await bcrypt.compare(password, user.password);
 
 		if (!result) {
 			return res.status(401).json({message: "wrong credentials"});
 		}
 
-		const token = jwt.sign({email, dateNow: new Date()}, secret);
+		const token = jwt.sign({email, dateNow: new Date()}, secret, {expiresIn: "2h"});
 		return res.status(200).json({token});
 
 	} catch (e) {
 		console.error("Login error:", e);
-		return res.status(500).json({error: "internal server error"}); // ← always respond
+		return res.status(500).json({error: "internal server error"});
 	}
 }
 
@@ -65,7 +65,11 @@ async function addUser(req, res) {
 
 		const userAdded = await userService.createUser(userObj)
 
-		if (typeof userAdded === "string") return res.status(409).json({error: userAdded});
+		if (typeof userAdded === "string") {
+			console.log(userAdded)
+			return res.status(409).json({error: userAdded})
+		}
+		;
 
 		if (!(userAdded instanceof Model)) {
 
