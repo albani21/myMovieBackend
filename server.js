@@ -9,9 +9,10 @@ const authRouter = require("./router/user.routes");
 
 
 const PORT = process.env.SERVER_PORT || 3000;
-
+const frontEnd = process.env.FRONTEND || "http://localhost:5173";
+console.log(frontEnd);
 app.use(helmet());
-app.use(cors({origin: "http://localhost:5173"}));
+app.use(cors({origin: frontEnd}));
 app.use(express.json());
 
 app.use("/api", authRouter);
