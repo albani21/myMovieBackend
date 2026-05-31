@@ -9,5 +9,11 @@ module.exports = new Sequelize(
 		host: process.env.DB_HOST,
 		port: process.env.DB_PORT,
 		dialect: process.env.DB_DIALECT,
+		dialectOptions: {
+			ssl: {
+				require: true,
+				rejectUnauthorized: false // Required for platforms like Heroku/Render/Neon unless you provide a CA cert
+			}
+		},
 		logging: console.log
 	});
